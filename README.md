@@ -2,6 +2,15 @@
 
 Open `index.html` in a modern browser. No install is required.
 
+## Current interface
+
+Loopbank uses a clean white, practice-test-style interface. The bank library is its own home page; there is no bank sidebar. Clicking a bank opens a dedicated bank page with its questions, progress, export/delete controls, and a **Back to banks** button.
+
+Every bank can be renamed from either:
+
+- the pencil button on its card in the bank library, or
+- the **Rename** control at the top of the individual bank page.
+
 ## CSV format
 
 ```csv
@@ -14,30 +23,35 @@ The header is optional. The app uses the first two columns.
 
 ## Accounts and automatic saving
 
-Loopbank now requires a **username and password**. You can create an account from the sign-in screen and then sign in later with the same credentials.
+Loopbank uses a username and password. Each browser-local account keeps its own question banks, generations, names, answers, and checkpoints.
 
-This is still a standalone static website, so accounts are **local to the browser** rather than server-backed. A salted password verifier is stored locally; the plaintext password is not stored. Every account gets its own question-bank data and checkpoints in browser storage, and all changes save automatically.
-
-For true cloud accounts, cross-device sync, password recovery, and stronger authentication, the next step would be connecting this UI to a backend/database.
+This is a standalone static website, so accounts are local to the browser rather than server-backed. A salted password verifier is stored locally; the plaintext password is not stored. Cross-device sync would require a backend/database.
 
 ## Live adaptive generations
 
-- As soon as you begin using Generation X, Loopbank creates Generation X+1 as a **Building live** bank.
+- As soon as you begin using Generation X, Loopbank creates Generation X+1 as a live-building bank.
 - Every question marked **Need to review** is added to the next generation immediately.
-- As the number/rate of review-needed questions rises, the next generation also gains reinforcement questions from the original source bank.
-- Reinforcement is selected from nearby question numbers and prefers questions that were not just used in the current generation.
-- The live bank remains visible in the sidebar while you work and unlocks when Generation X is complete.
-- If Generation X finishes with zero review-needed questions, its empty next-generation placeholder is removed and the branch ends.
+- As review need grows, reinforcement questions from the original bank are added too.
+- The next bank appears in the bank library while it is building and unlocks when the current generation is complete.
+- If a generation finishes with zero review-needed questions, the empty next-generation placeholder is removed.
 
 ## Bank management
 
-- The left bank sidebar is collapsible, and that preference is remembered.
-- Every bank has its own **× delete** button.
+- Each bank is its own page/view rather than being selected from a sidebar.
+- Every bank is renamable.
+- Every bank has its own delete option.
 - Deleting a generation also deletes later generations that depend on it.
-- There is no global “remove local data” control.
-- You can export the active generation to CSV or redo a generation.
+- The active bank can be exported to CSV or reset with **Redo this bank**.
+
+## Undo
+
+- **Undo last** works while solving and after the final answer.
+- Undo restores the previous question to unanswered and recalculates the live next-generation queue.
+- Undo is disabled for an earlier generation after a later generation has already been started, protecting dependent progress.
 
 ## Shortcuts
 
 - `1` — Correct & confident
 - `2` — Need to review
+- `U` — Undo the most recent classification
+- `Ctrl+Z` / `Cmd+Z` — Undo the most recent classification

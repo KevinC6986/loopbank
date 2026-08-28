@@ -21,3 +21,11 @@ The header row is optional. The app uses only the first two columns.
 5. If a generation has zero review marks, that branch is complete and no new bank is generated.
 
 The app also lets you export the active generation as CSV, redo a generation, and resume from the last unfinished checkpoint after closing/reopening the page.
+
+## Local profiles / sign in
+
+The **Sign in** control creates a browser-local profile using a name and email. Each profile gets its own saved banks and checkpoints on that browser. Because this project is a standalone static site, this is not server-backed authentication: no password is stored or transmitted, and the profile does not sync across devices. Existing data from the original version is preserved as guest data; when a new profile is first created, current guest banks are copied into it.
+
+## Collapsible bank sidebar
+
+Use the arrow button at the top of the Question Bank panel to collapse or expand the sidebar. The preference is remembered in the browser.

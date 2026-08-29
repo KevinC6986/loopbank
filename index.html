@@ -30,7 +30,7 @@
 </div>
 <div class="section-row"><h2>Your banks</h2><span class="bank-count" id="bankCount"></span></div>
 <div class="bank-grid" id="bankGrid"></div>
-<div class="empty-home" id="emptyHome"><strong>No question banks yet</strong>Import a CSV above to create Generation 1.</div>
+<div class="empty-home" id="emptyHome"><strong>No question banks yet</strong>Import a CSV above to create Generation 0.</div>
 </div>
 </section>
 <section class="page bank-page" id="bankPage">
@@ -45,7 +45,7 @@
 </div>
 <div class="test-head">
 <div class="title-line"><h1 id="activeName">Question Bank</h1><button class="rename-link" id="renameActiveBtn">Rename</button></div>
-<div class="generation-line" id="generationLine">Generation 1</div>
+<div class="generation-line" id="generationLine">Generation 0</div>
 <div class="progress-row"><div class="progress-track"><div class="progress-fill" id="progressFill"></div></div><div class="progress-copy" id="progressText">0 / 0 classified</div><div class="progress-copy" id="reviewCount">0 marked for review</div></div>
 </div>
 <main id="workArea">
@@ -116,8 +116,22 @@
   function validSession(){const s=safeJSON(SESSION_KEY,null),accounts=safeJSON(ACCOUNTS_KEY,{});return s&&accounts[s.id]?{id:s.id,username:accounts[s.id].username}:null}
   let currentUser=validSession();
   function storageKey(user=currentUser){return user?`loopbank_data_${user.id}_v3`:null}
-  function blankState(){return {banks:[],activeId:null}}
-  function load(){return currentUser?safeJSON(storageKey(),blankState()):blankState()}
+  function blankState(){return {banks:[],activeId:null,modelVersion:4}}
+  function stripGenerationSuffix(name){return String(name||'Question Bank').replace(/\s*[·-]\s*Generation\s+\d+\s*$/i,'').trim()||'Question Bank'}
+  function normalizeState(raw){
+    const next=raw&&typeof raw==='object'?raw:blankState();next.banks=Array.isArray(next.banks)?next.banks:[];next.activeId=next.activeId||null;
+    const roots=next.banks.filter(b=>!b.parentId);
+    for(const root of roots){
+      const family=next.banks.filter(b=>b.rootId===root.id||b.id===root.id);
+      const minGen=Math.min(...family.map(b=>Number.isFinite(Number(b.generation))?Number(b.generation):1));
+      if(minGen>0){for(const b of family)b.generation=Math.max(0,(Number(b.generation)||1)-minGen)}
+      root.generation=0;root.rootId=root.id;
+      const base=stripGenerationSuffix(root.name);
+      for(const b of family){b.name=base;if(b.id!==root.id&&b.generation<1)b.generation=1}
+    }
+    next.modelVersion=4;return next
+  }
+  function load(){const normalized=normalizeState(currentUser?safeJSON(storageKey(),blankState()):blankState());if(currentUser)localStorage.setItem(storageKey(),JSON.stringify(normalized));return normalized}
   let state=load();
   function persist(msg='Autosaved'){if(!currentUser)return;localStorage.setItem(storageKey(),JSON.stringify(state));if(el.save)el.save.textContent=msg}
   function activeBank(){return state.banks.find(b=>b.id===state.activeId)||null}
@@ -139,13 +153,13 @@
       const qs=(hasHeader?cleaned.slice(1):cleaned).filter(q=>q.number&&/^https?:\/\//i.test(q.url));
       if(!qs.length){showToast('No valid question rows found.');return}
       const id=uid(),name=file.name.replace(/\.csv$/i,'')||'Question Bank';
-      const bank={id,rootId:id,parentId:null,generation:1,name,createdAt:Date.now(),questions:qs.map((q,i)=>({...q,rootIndex:i,origin:'imported',status:null})),currentIndex:0,completed:false,nextId:null,suppressNext:false,history:[]};
+      const bank={id,rootId:id,parentId:null,generation:0,name,createdAt:Date.now(),questions:qs.map((q,i)=>({...q,rootIndex:i,origin:'imported',status:null})),currentIndex:0,completed:false,nextId:null,suppressNext:false,history:[]};
       state.banks.push(bank);state.activeId=id;syncAdaptiveChild(bank);persist();showToast(`Imported ${qs.length} questions`);goBank(id)
     };reader.readAsText(file)
   }
 
   function nextUnanswered(bank,from=0){for(let i=Math.max(0,from);i<bank.questions.length;i++)if(!bank.questions[i].status)return i;for(let i=0;i<Math.max(0,from);i++)if(!bank.questions[i].status)return i;return -1}
-  function ensureAdaptiveChild(parent){if(parent.suppressNext)return null;if(parent.nextId){const existing=state.banks.find(b=>b.id===parent.nextId);if(existing)return existing;parent.nextId=null}const root=rootBank(parent);const child={id:uid(),rootId:parent.rootId,parentId:parent.id,generation:parent.generation+1,name:`${root.name} · Generation ${parent.generation+1}`,createdAt:Date.now()+parent.generation,questions:[],currentIndex:0,completed:false,nextId:null,suppressNext:false,building:!parent.completed,adaptive:{misses:0,extras:0,answered:0,missRate:0},history:[]};state.banks.push(child);parent.nextId=child.id;return child}
+  function ensureAdaptiveChild(parent){if(parent.suppressNext)return null;if(parent.nextId){const existing=state.banks.find(b=>b.id===parent.nextId);if(existing)return existing;parent.nextId=null}const root=rootBank(parent);const child={id:uid(),rootId:parent.rootId,parentId:parent.id,generation:parent.generation+1,name:root.name,createdAt:Date.now()+parent.generation,questions:[],currentIndex:0,completed:false,nextId:null,suppressNext:false,building:!parent.completed,adaptive:{misses:0,extras:0,answered:0,missRate:0},history:[]};state.banks.push(child);parent.nextId=child.id;return child}
   function removeBankTree(id){const ids=new Set();const collect=x=>{ids.add(x);state.banks.filter(b=>b.parentId===x).forEach(b=>collect(b.id))};collect(id);state.banks=state.banks.filter(b=>!ids.has(b.id));return ids}
 
   function syncAdaptiveChild(parent){
@@ -174,12 +188,12 @@
 
   function renderHome(){
     el.grid.innerHTML='';const banks=[...state.banks].sort((a,b)=>a.createdAt-b.createdAt);el.bankCount.textContent=`${banks.length} bank${banks.length===1?'':'s'}`;el.empty.style.display=banks.length?'none':'block';
-    banks.forEach(b=>{const done=b.questions.filter(q=>q.status).length,locked=bankLocked(b),isLive=locked||b.building;const card=document.createElement('article');card.className='bank-card'+(isLive?' live':'');const status=b.completed?['Completed','done']:isLive?[`${b.questions.length} queued`,'live']:[`${pct(done,b.questions.length)}% complete`,''];card.innerHTML=`<div><div class="bank-card-top"><div><div class="bank-name">${escapeHTML(b.name)}</div><div class="bank-meta">Generation ${b.generation} · ${b.questions.length} question${b.questions.length===1?'':'s'}${isLive?' · building live':''}</div></div><div class="card-actions"><button class="icon-btn rename" title="Rename bank" aria-label="Rename bank">✎</button><button class="icon-btn delete" title="Delete bank" aria-label="Delete bank">×</button></div></div></div><div class="status-row"><span class="status ${status[1]}">${status[0]}</span><div class="mini-progress"><span style="width:${pct(done,b.questions.length)}%"></span></div></div>`;card.onclick=()=>goBank(b.id);card.querySelector('.rename').onclick=e=>{e.stopPropagation();renameBank(b.id)};card.querySelector('.delete').onclick=e=>{e.stopPropagation();deleteBank(b.id)};el.grid.appendChild(card)})
+    banks.forEach(b=>{const done=b.questions.filter(q=>q.status).length,locked=bankLocked(b),isLive=locked||b.building,isRoot=b.generation===0&&!b.parentId;const card=document.createElement('article');card.className='bank-card'+(isLive?' live':'');const status=b.completed?['Completed','done']:isLive?[`${b.questions.length} queued`,'live']:[`${pct(done,b.questions.length)}% complete`,''];card.innerHTML=`<div><div class="bank-card-top"><div><div class="bank-name">${escapeHTML(b.name)}</div><div class="bank-generation">Generation ${b.generation}</div><div class="bank-meta">${b.questions.length} question${b.questions.length===1?'':'s'}${isLive?' · building live':''}</div></div><div class="card-actions">${isRoot?'<button class="icon-btn rename" title="Rename bank" aria-label="Rename bank">✎</button>':''}<button class="icon-btn delete" title="Delete bank" aria-label="Delete bank">×</button></div></div></div><div class="status-row"><span class="status ${status[1]}">${status[0]}</span><div class="mini-progress"><span style="width:${pct(done,b.questions.length)}%"></span></div></div>`;card.onclick=()=>goBank(b.id);const rename=card.querySelector('.rename');if(rename)rename.onclick=e=>{e.stopPropagation();renameBank(b.id)};card.querySelector('.delete').onclick=e=>{e.stopPropagation();deleteBank(b.id)};el.grid.appendChild(card)})
   }
 
   function hideWorkViews(){el.qCard.style.display='none';el.summary.style.display='none';el.building.style.display='none'}
   function renderBankPage(){
-    const b=activeBank();if(!b){goHome();return}if(!bankLocked(b)&&!b.completed&&!b.suppressNext)syncAdaptiveChild(b);updateUndoButtons(b);hideWorkViews();el.activeName.textContent=b.name;
+    const b=activeBank();if(!b){goHome();return}if(!bankLocked(b)&&!b.completed&&!b.suppressNext)syncAdaptiveChild(b);updateUndoButtons(b);hideWorkViews();el.activeName.textContent=rootBank(b).name;$('#renameActiveBtn').style.display=(b.generation===0&&!b.parentId)?'inline-flex':'none';
     const done=b.questions.filter(q=>q.status).length,reviews=b.questions.filter(q=>q.status==='review').length;el.pText.textContent=`${done} / ${b.questions.length} classified`;el.reviewCount.textContent=`${reviews} marked for review`;el.fill.style.width=pct(done,b.questions.length)+'%';
     if(bankLocked(b)){renderBuilding(b);return}if(!b.completed&&!b.suppressNext)persist();el.gen.textContent=`Generation ${b.generation} · ${b.parentId?'Adaptive review bank':'Imported source bank'}`;if(b.completed){renderSummary(b);return}
     el.qCard.style.display='block';const idx=nextUnanswered(b,b.currentIndex);if(idx<0){completeBank(b);return}b.currentIndex=idx;const q=b.questions[idx];el.qNum.textContent=q.number;el.qSource.textContent=q.url;el.open.href=q.url;el.qCounter.textContent=`${idx+1} of ${b.questions.length}`
@@ -191,9 +205,9 @@
     const id=routeBankId();if(id&&state.banks.some(b=>b.id===id)){state.activeId=id;el.home.classList.remove('show');el.bankPage.classList.add('show');renderBankPage()}else{state.activeId=null;el.bankPage.classList.remove('show');el.home.classList.add('show');renderHome()}
   }
 
-  function exportActive(){if(!currentUser){openAuth(true);return}const b=activeBank();if(!b){showToast('Open a bank first.');return}const lines=[['question_number','source_url','status','origin'],...b.questions.map(q=>[q.number,q.url,q.status||'',q.origin])].map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n');const blob=new Blob([lines],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=b.name.replace(/[^a-z0-9-_]+/gi,'_')+'.csv';a.click();URL.revokeObjectURL(a.href)}
+  function exportActive(){if(!currentUser){openAuth(true);return}const b=activeBank();if(!b){showToast('Open a bank first.');return}const lines=[['question_number','source_url','status','origin'],...b.questions.map(q=>[q.number,q.url,q.status||'',q.origin])].map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n');const blob=new Blob([lines],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${rootBank(b).name}_Generation_${b.generation}`.replace(/[^a-z0-9-_]+/gi,'_')+'.csv';a.click();URL.revokeObjectURL(a.href)}
   function resetActiveBank(){const b=activeBank();if(!b)return;b.questions.forEach(q=>q.status=null);b.currentIndex=0;b.completed=false;b.suppressNext=false;b.history=[];if(b.nextId){removeBankTree(b.nextId);b.nextId=null}syncAdaptiveChild(b);persist('Reset ✓');renderBankPage()}
-  function renameBank(id){const b=state.banks.find(x=>x.id===id);if(!b)return;const next=prompt('Rename this question bank:',b.name);if(next===null)return;const name=next.trim();if(!name){showToast('Bank name cannot be empty.');return}b.name=name;persist('Renamed ✓');if(activeBank()?.id===id)el.activeName.textContent=name;renderRoute();showToast('Bank renamed')}
+  function renameBank(id){const b=state.banks.find(x=>x.id===id);if(!b)return;if(b.generation!==0||b.parentId){showToast('Only Generation 0 banks can be renamed.');return}const next=prompt('Rename this question bank:',b.name);if(next===null)return;const name=next.trim();if(!name){showToast('Bank name cannot be empty.');return}const family=state.banks.filter(x=>x.rootId===b.id||x.id===b.id);for(const member of family)member.name=name;persist('Renamed ✓');if(activeBank()?.rootId===b.id||activeBank()?.id===b.id)el.activeName.textContent=name;renderRoute();showToast('Bank family renamed')}
   function deleteBank(id){const b=state.banks.find(x=>x.id===id);if(!b)return;const childCount=state.banks.filter(x=>{let p=x;while(p?.parentId){if(p.parentId===id)return true;p=state.banks.find(y=>y.id===p.parentId)}return false}).length;const suffix=childCount?` This will also delete ${childCount} later generation${childCount===1?'':'s'} built from it.`:'';if(!confirm(`Delete ${b.name}?${suffix}`))return;const p=parentBank(b),removed=removeBankTree(id);if(p){p.nextId=null;p.suppressNext=true}const wasActive=removed.has(state.activeId);if(wasActive)state.activeId=null;persist('Bank deleted');showToast('Bank deleted');if(wasActive)goHome();else renderHome()}
 
   ['browseBtn','importTopBtn'].forEach(id=>$('#'+id).onclick=()=>{if(!currentUser)openAuth(true);else el.file.click()});

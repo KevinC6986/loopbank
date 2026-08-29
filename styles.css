@@ -824,3 +824,16 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Generation hierarchy */
+.bank-generation {
+  margin-top: 8px;
+  color: var(--navy-2);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .075em;
+  text-transform: uppercase;
+}
+.bank-generation + .bank-meta { margin-top: 5px; }

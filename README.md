@@ -6,10 +6,12 @@ Open `index.html` in a modern browser. No install is required.
 
 Loopbank uses a clean white, practice-test-style interface. The bank library is its own home page; there is no bank sidebar. Clicking a bank opens a dedicated bank page with its questions, progress, export/delete controls, and a **Back to banks** button.
 
-Every bank can be renamed from either:
+Generation 0 banks can be renamed from either:
 
-- the pencil button on its card in the bank library, or
-- the **Rename** control at the top of the individual bank page.
+- the pencil button on the Generation 0 card in the bank library, or
+- the **Rename** control at the top of the Generation 0 bank page.
+
+Later generations inherit that name automatically and do not have separate rename controls.
 
 ## CSV format
 
@@ -38,7 +40,7 @@ This is a standalone static website, so accounts are local to the browser rather
 ## Bank management
 
 - Each bank is its own page/view rather than being selected from a sidebar.
-- Every bank is renamable.
+- Only Generation 0 banks are directly renamable; later generations inherit the Generation 0 name.
 - Every bank has its own delete option.
 - Deleting a generation also deletes later generations that depend on it.
 - The active bank can be exported to CSV or reset with **Redo this bank**.
@@ -60,3 +62,10 @@ This is a standalone static website, so accounts are local to the browser rather
 ## Styling
 
 The visual design lives in `styles.css`. It uses Fraunces for display headings, Manrope for interface text, and IBM Plex Mono for status/progress details, with system fallbacks. The interface remains primarily white with Bluebook-inspired structure and subtle blue accents.
+
+
+## Generation naming
+
+- Imported CSV banks are **Generation 0**.
+- The first adaptive review copy is **Generation 1**, followed by Generation 2, and so on.
+- Only Generation 0 can be renamed. Its later generations automatically inherit the same bank name.

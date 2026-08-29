@@ -11,7 +11,9 @@ Generation 0 banks can be renamed from either:
 - the pencil button on the Generation 0 card in the bank library, or
 - the **Rename** control at the top of the Generation 0 bank page.
 
-Later generations inherit that name automatically and do not have separate rename controls.
+Later generations inherit that name automatically and do not have separate rename controls. The generation label is displayed inline beside the bank name, using its own compact monospace styling.
+
+On the solving page, the question identifier is shown compactly as **Question X** rather than as a separate oversized question number.
 
 ## CSV format
 

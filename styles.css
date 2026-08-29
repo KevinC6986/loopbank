@@ -348,6 +348,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 .bank-card.live::before { background: linear-gradient(180deg, #7c73dd, #376cb2); }
 .bank-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.bank-title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .bank-name {
   color: var(--navy);
   font-family: var(--display);
@@ -482,7 +483,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 .rename-link:hover { background: var(--soft-blue); border-color: #dae5f1; text-decoration: none; }
 .generation-line {
-  margin-top: 8px;
+  margin-top: 0;
   color: var(--muted);
   font-family: var(--mono);
   font-size: 9.5px;
@@ -521,9 +522,9 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .question-label {
   color: var(--navy);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: .11em;
+  letter-spacing: .085em;
   text-transform: uppercase;
 }
 .question-counter {
@@ -532,16 +533,6 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   font-size: 9.5px;
   font-weight: 500;
   letter-spacing: .025em;
-}
-.q-number {
-  margin: 0 0 15px;
-  color: var(--ink);
-  font-family: var(--display);
-  font-size: clamp(58px, 8vw, 82px);
-  font-weight: 700;
-  line-height: .95;
-  letter-spacing: -.055em;
-  font-variant-numeric: oldstyle-nums;
 }
 .q-source {
   max-width: 680px;
@@ -805,7 +796,6 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   .progress-row { grid-template-columns: 1fr; gap: 9px; }
   .progress-copy { white-space: normal; }
   .question-area { padding: 43px 0 34px; }
-  .q-number { font-size: 61px; }
   .decision-bar { grid-template-columns: 1fr; }
   .stat-grid { grid-template-columns: 1fr; }
   .center-state { padding-top: 68px; }
@@ -827,7 +817,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 
 /* Generation hierarchy */
 .bank-generation {
-  margin-top: 8px;
+  margin-top: 0;
   color: var(--navy-2);
   font-family: var(--mono);
   font-size: 10px;
@@ -836,4 +826,4 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   letter-spacing: .075em;
   text-transform: uppercase;
 }
-.bank-generation + .bank-meta { margin-top: 5px; }
+.bank-title-row + .bank-meta { margin-top: 5px; }

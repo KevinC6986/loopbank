@@ -55,3 +55,8 @@ This is a standalone static website, so accounts are local to the browser rather
 - `2` — Need to review
 - `U` — Undo the most recent classification
 - `Ctrl+Z` / `Cmd+Z` — Undo the most recent classification
+
+
+## Styling
+
+The visual design lives in `styles.css`. It uses Fraunces for display headings, Manrope for interface text, and IBM Plex Mono for status/progress details, with system fallbacks. The interface remains primarily white with Bluebook-inspired structure and subtle blue accents.
